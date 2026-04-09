@@ -2,89 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --bg-main: #0f0f0f;
-    --bg-card: #1a1a1a;
-    --bg-elevated: #242424;
-    --accent: #0ea5e9;
-    --text-primary: #f4f4f5;
-    --text-muted: #a1a1aa;
-    --border: #2a2a2a;
-    --signal-red: #ef4444;
-    --signal-yellow: #f59e0b;
-    --signal-green: #22c55e;
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  html {
-    color-scheme: dark;
-  }
-
-  body {
-    margin: 0;
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    font-family: 'Sora', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  code, pre, .font-mono {
-    font-family: 'DM Mono', monospace;
-  }
-
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #2a2a2a;
-    border-radius: 3px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: #3a3a3a;
-  }
+:root {
+  --navy: #1B3A6B; --navy2: #243f74; --blue: #2E86AB; --teal: #00838F;
+  --gold: #E07B39; --gold2: #f08c50; --green: #2E7D32; --red: #C62828; --amber: #F57F17;
+  --bg: #080e1d; --bg2: #0d1526; --bg3: #121c30;
+  --s1: rgba(255,255,255,.035); --s2: rgba(255,255,255,.065);
+  --b1: rgba(255,255,255,.07); --b2: rgba(255,255,255,.13);
+  --t1: #dde4f0; --t2: #7e90b0; --t3: #3e506a;
+  --rc: #2E86AB; --rc2: rgba(46,134,171,.15);
 }
 
-@layer utilities {
-  .animate-in {
-    animation-fill-mode: both;
-  }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t1); font-size: 13px; overflow: hidden; }
 
-  .slide-in-from-right-4 {
-    animation-name: slideInFromRight4;
-  }
-
-  .slide-in-from-bottom {
-    animation-name: slideInFromBottom;
-  }
-
-  .zoom-in-95 {
-    animation-name: zoomIn95;
-  }
-
-  .fade-in {
-    animation-name: fadeIn;
-  }
-
-  .duration-200 {
-    animation-duration: 200ms;
-  }
-
-  .duration-300 {
-    animation-duration: 300ms;
-  }
-}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 99px; }
 
 @keyframes slideInFromRight4 {
   from { transform: translateX(1rem); opacity: 0; }

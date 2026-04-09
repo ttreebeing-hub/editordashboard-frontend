@@ -3,14 +3,20 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './shared/config/query-client';
 import { ToastProvider } from './shared/components/Toast';
 import { AppRoutes } from './routes';
+import { RoleProvider } from './shared/stores/roleStore';
+import { TaskProvider } from './shared/stores/taskStore';
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <ToastProvider>
-          <AppRoutes />
-        </ToastProvider>
+        <RoleProvider>
+          <TaskProvider>
+            <ToastProvider>
+              <AppRoutes />
+            </ToastProvider>
+          </TaskProvider>
+        </RoleProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );

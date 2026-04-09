@@ -1,3 +1,35 @@
+// ---- New V2 types ----
+export type TaskStep = 'AI Process' | 'Cut' | 'Edit' | 'Export' | 'Review' | 'Done' | 'Reject';
+export type TaskChannel = 'nhile' | 'msni' | 'spice' | 'nhileteam' | 'nedu';
+export type TaskType = 'short' | 'long';
+
+export interface Task {
+  id: string;
+  name: string;
+  ch: TaskChannel;
+  type: TaskType;
+  ed: string; // editor name
+  step: TaskStep;
+  pend: boolean; // waiting for approval
+  dl: string; // deadline ISO
+  src: string; // drive link
+  cr: string; // created ISO
+}
+
+export interface TeamMember {
+  id: string;
+  n: string; // full name
+  role: string;
+  tr: 'short' | 'long' | 'leader' | 'coleader';
+  av: string; // avatar initial
+  c: string; // color
+  mh: number; // max hours
+  st: 'online' | 'busy' | 'offline';
+}
+
+export type AppRole = 'operation' | 'leader' | 'coleader' | 'editor';
+
+// ---- Legacy types (kept for backwards compat) ----
 export type Channel = 'nhiLe_holding' | 'spice_and_nice' | 'ms_nhi' | 'nhiLe_team' | 'nedu' | 'other';
 export type VideoType = 'long_16_9' | 'short_9_16';
 export type Priority = 'urgent' | 'priority' | 'normal';

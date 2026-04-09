@@ -13,14 +13,14 @@ export function LoginPage() {
     setError('');
     setLoading(true);
     try {
+      // Luôn redirect về /auth/callback — URL này phải có trong Supabase Redirect URLs
+      const redirectTo = `${window.location.origin}/auth/callback`;
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}${from}`,
-        },
+        options: { redirectTo },
       });
       if (authError) throw authError;
-      // Browser will redirect to Google — no need to navigate manually
+      // Browser sẽ tự redirect sang Google
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Không thể kết nối Google. Thử lại sau.');
       setLoading(false);

@@ -5,6 +5,7 @@ import { PageLoader } from '../shared/components/LoadingSpinner';
 import { memberRoutes } from './member.routes';
 import { leaderRoutes } from './leader.routes';
 import { LoginPage } from '../modules/auth/LoginPage';
+import { AuthCallbackPage } from '../modules/auth/AuthCallbackPage';
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
@@ -19,6 +20,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route
         element={
           <AuthGuard>

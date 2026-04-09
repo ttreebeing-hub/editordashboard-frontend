@@ -1,11 +1,7 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { supabase } from '../../shared/config/supabase';
 
 export function LoginPage() {
-  const location = useLocation();
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/pool';
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 

@@ -15,6 +15,8 @@ export const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
+      // Dùng implicit flow thay vì PKCE để tránh mất state khi redirect cross-domain
+      flowType: 'implicit',
     },
   }
 );

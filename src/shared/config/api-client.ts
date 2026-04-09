@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || 'https://api.nquoc.vn/api/v1/editor';
+const BASE_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:8080/api';
 
 export async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
   const { data: { session } } = await supabase.auth.getSession();

@@ -11,6 +11,14 @@ export const handlers = [
   http.get(`${API}/tasks`, () =>
     HttpResponse.json({ tasks: MOCK_TASKS, total: MOCK_TASKS.length, page: 1, limit: 20 })
   ),
+  // Pool page uses /tasks/pool — returns open tasks as plain array
+  http.get(`${API}/tasks/pool`, ({ request }) => {
+    const url = new URL(request.url);
+    const priority = url.searchParams.get('priority');
+    let tasks = MOCK_TASKS.filter(t => t.status === 'open');
+    if (priority) tasks = tasks.filter(t => t.priority === priority);
+    return HttpResponse.json(tasks);
+  }),
   http.get(`${API}/tasks/mine`, () =>
     HttpResponse.json({ tasks: MOCK_TASKS.filter(t => t.assigned_to === 'mock-user-id') })
   ),
@@ -28,27 +36,34 @@ export const handlers = [
     return HttpResponse.json({ task });
   }),
 
-  // ── SOP ──────────────────────────────────────────────────
-  http.get(`${API}/sop/sessions/:sessionId`, ({ params }) =>
-    HttpResponse.json({ session: { ...MOCK_SESSION, id: params.sessionId } })
+  // ── SOP Sessions (api uses /sessions/...) ────────────────
+  http.get(`${API}/sessions/active`, () =>
+    HttpResponse.json(MOCK_SESSION)
   ),
-  http.patch(`${API}/sop/sessions/:sessionId/steps/:stepNumber`, async ({ request }) => {
+  http.get(`${API}/sessions/:sessionId`, ({ params }) =>
+    HttpResponse.json({ ...MOCK_SESSION, id: params.sessionId })
+  ),
+  http.patch(`${API}/sessions/:sessionId/steps/:stepNumber`, async ({ request }) => {
     const body = await request.json() as Record<string, unknown>;
     return HttpResponse.json({ step: { ...body, is_completed: body.is_completed ?? false }, nextStep: typeof body.is_completed === 'boolean' && body.is_completed ? 3 : null, gateStatus: { passed: true } });
   }),
-  http.post(`${API}/sop/sessions/:sessionId/prediction`, async ({ request }) => {
+  http.patch(`${API}/sessions/:sessionId/advance`, async ({ request }) => {
     const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json({ prediction: { id: `p${Date.now()}`, session_id: 's1', ...body, created_at: new Date().toISOString() }, cannotEditWarning: true });
+    return HttpResponse.json({ ...MOCK_SESSION, current_step: body.next_step ?? 1 });
   }),
-  http.get(`${API}/sop/sessions/:sessionId/prediction`, () =>
-    HttpResponse.json({ prediction: null })
+  http.post(`${API}/sessions/:sessionId/prediction`, async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json({ id: `p${Date.now()}`, session_id: 's1', ...body, created_at: new Date().toISOString() });
+  }),
+  http.get(`${API}/sessions/:sessionId/prediction`, () =>
+    HttpResponse.json(null)
   ),
-  http.post(`${API}/sop/sessions/:sessionId/reflection`, () =>
-    HttpResponse.json({ reflectionId: `r${Date.now()}`, savedAt: new Date().toISOString() })
-  ),
-  http.post(`${API}/sop/sessions/:sessionId/submit`, () =>
-    HttpResponse.json({ submittedAt: new Date().toISOString(), sessionStatus: 'submitted' })
-  ),
+  http.post(`${API}/sessions/:sessionId/submit`, async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    return HttpResponse.json({ ...MOCK_SESSION, status: 'submitted', submitted_at: new Date().toISOString(), ...body });
+  }),
+
+  // ── SOP helpers ──────────────────────────────────────────
   http.post(`${API}/sop/ai-assist`, async ({ request }) => {
     const body = await request.json() as Record<string, unknown>;
     return HttpResponse.json({
@@ -73,31 +88,57 @@ export const handlers = [
     return HttpResponse.json({ sessionStatus: body.decision, revisionCount: 0 });
   }),
 
-  // ── Lessons ──────────────────────────────────────────────
-  http.get(`${API}/lessons`, () =>
-    HttpResponse.json({ lessons: MOCK_LESSONS, total: MOCK_LESSONS.length })
-  ),
+  // ── Lessons — return array directly ──────────────────────
+  http.get(`${API}/lessons`, ({ request }) => {
+    const url = new URL(request.url);
+    const type = url.searchParams.get('type');
+    let lessons = MOCK_LESSONS;
+    if (type) lessons = lessons.filter(l => l.type === type);
+    return HttpResponse.json(lessons);
+  }),
   http.get(`${API}/lessons/recent`, () =>
-    HttpResponse.json({ lessons: MOCK_LESSONS.slice(0, 3) })
+    HttpResponse.json(MOCK_LESSONS.slice(0, 3))
   ),
   http.post(`${API}/lessons`, async ({ request }) => {
     const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json({ lesson: { id: `l${Date.now()}`, created_by: 'mock-user-id', session_id: null, ...body, created_at: new Date().toISOString(), deleted_at: null } }, { status: 201 });
+    return HttpResponse.json({ id: `l${Date.now()}`, created_by: 'mock-user-id', session_id: null, ...body, created_at: new Date().toISOString(), deleted_at: null }, { status: 201 });
   }),
   http.patch(`${API}/lessons/:id`, async ({ params, request }) => {
     const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json({ lesson: { ...MOCK_LESSONS.find(l => l.id === params.id), ...body } });
+    return HttpResponse.json({ ...MOCK_LESSONS.find(l => l.id === params.id), ...body });
   }),
   http.delete(`${API}/lessons/:id`, () =>
     HttpResponse.json({ deleted: true })
   ),
 
   // ── Progress ─────────────────────────────────────────────
+  // /progress/me — used by MemberDashboard
   http.get(`${API}/progress/me`, () =>
     HttpResponse.json({ streak_days: 7, monthly_scores: MOCK_MONTHLY_SCORES, accuracy_history: MOCK_ACCURACY_HISTORY, mindset_timeline: [] })
   ),
+  // Individual endpoints used by ProgressPage
+  http.get(`${API}/progress/streak`, () =>
+    HttpResponse.json({ current_streak: 7, longest_streak: 12, last_active: new Date().toISOString() })
+  ),
+  http.get(`${API}/progress/monthly-scores`, () =>
+    HttpResponse.json(MOCK_MONTHLY_SCORES)
+  ),
   http.get(`${API}/progress/monthly-score`, () =>
     HttpResponse.json({ score: MOCK_MONTHLY_SCORES[0] })
+  ),
+  http.get(`${API}/progress/accuracy-history`, () =>
+    HttpResponse.json(MOCK_ACCURACY_HISTORY.map(h => ({
+      date: h.computed_at,
+      retention_accuracy: h.overall_accuracy,
+      ctr_accuracy: h.overall_accuracy - 2,
+      overall_accuracy: h.overall_accuracy,
+    })))
+  ),
+  http.get(`${API}/progress/mindset-timeline`, () =>
+    HttpResponse.json([])
+  ),
+  http.post(`${API}/progress/mindset-eval`, () =>
+    HttpResponse.json({ saved: true })
   ),
 
   // ── Analytics ────────────────────────────────────────────

@@ -3,27 +3,27 @@
 @tailwind utilities;
 
 :root {
-  /* Near-black dark theme */
-  --bg: #0c0c0e; --bg2: #121216; --bg3: #1a1a20; --bg4: #222228;
-  --b1: rgba(255,255,255,0.06); --b2: rgba(255,255,255,0.1);
-  --t1: #f0f0f4; --t2: #a0a0b0; --t3: #5a5a70;
+  /* Light theme */
+  --bg: #f4f5f7; --bg2: #ffffff; --bg3: #f0f1f4; --bg4: #e4e6eb;
+  --b1: rgba(0,0,0,0.07); --b2: rgba(0,0,0,0.12);
+  --t1: #111318; --t2: #4a4e5a; --t3: #8f95a3;
 
   /* Brand accent */
-  --accent: #0ea5e9; --accent2: rgba(14,165,233,0.12);
+  --accent: #0284c7; --accent2: rgba(2,132,199,0.10);
   --navy: #1e3a5f;
 
   /* Semantic colors */
-  --blue: #3b82f6; --blue2: rgba(59,130,246,0.12);
-  --teal: #14b8a6; --teal2: rgba(20,184,166,0.12);
-  --red: #ef4444; --red2: rgba(239,68,68,0.12);
-  --amber: #f59e0b; --amber2: rgba(245,158,11,0.12);
-  --green: #22c55e; --green2: rgba(34,197,94,0.12);
-  --purple: #a855f7; --purple2: rgba(168,85,247,0.12);
-  --gold: #f59e0b; --gold2: rgba(245,158,11,0.12);
+  --blue: #2563eb; --blue2: rgba(37,99,235,0.10);
+  --teal: #0d9488; --teal2: rgba(13,148,136,0.10);
+  --red: #dc2626; --red2: rgba(220,38,38,0.10);
+  --amber: #d97706; --amber2: rgba(217,119,6,0.10);
+  --green: #16a34a; --green2: rgba(22,163,74,0.10);
+  --purple: #9333ea; --purple2: rgba(147,51,234,0.10);
+  --gold: #d97706; --gold2: rgba(217,119,6,0.10);
 
   /* Compat aliases */
-  --s1: rgba(255,255,255,.04); --s2: rgba(255,255,255,.07);
-  --rc: #0ea5e9; --rc2: rgba(14,165,233,0.12);
+  --s1: rgba(0,0,0,.03); --s2: rgba(0,0,0,.06);
+  --rc: #0284c7; --rc2: rgba(2,132,199,0.10);
   --r: 8px; --r2: 12px;
 }
 

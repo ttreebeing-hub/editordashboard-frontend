@@ -3,37 +3,54 @@
 @tailwind utilities;
 
 :root {
-  --navy: #1B3A6B; --navy2: #243f74; --blue: #2E86AB; --teal: #00838F;
-  --gold: #E07B39; --gold2: #f08c50; --green: #2E7D32; --red: #C62828; --amber: #F57F17;
-  --bg: #080e1d; --bg2: #0d1526; --bg3: #121c30;
-  --s1: rgba(255,255,255,.035); --s2: rgba(255,255,255,.065);
-  --b1: rgba(255,255,255,.07); --b2: rgba(255,255,255,.13);
-  --t1: #dde4f0; --t2: #7e90b0; --t3: #3e506a;
-  --rc: #2E86AB; --rc2: rgba(46,134,171,.15);
+  /* Near-black dark theme */
+  --bg: #0c0c0e; --bg2: #121216; --bg3: #1a1a20; --bg4: #222228;
+  --b1: rgba(255,255,255,0.06); --b2: rgba(255,255,255,0.1);
+  --t1: #f0f0f4; --t2: #a0a0b0; --t3: #5a5a70;
+
+  /* Brand accent */
+  --accent: #0ea5e9; --accent2: rgba(14,165,233,0.12);
+  --navy: #1e3a5f;
+
+  /* Semantic colors */
+  --blue: #3b82f6; --blue2: rgba(59,130,246,0.12);
+  --teal: #14b8a6; --teal2: rgba(20,184,166,0.12);
+  --red: #ef4444; --red2: rgba(239,68,68,0.12);
+  --amber: #f59e0b; --amber2: rgba(245,158,11,0.12);
+  --green: #22c55e; --green2: rgba(34,197,94,0.12);
+  --purple: #a855f7; --purple2: rgba(168,85,247,0.12);
+  --gold: #f59e0b; --gold2: rgba(245,158,11,0.12);
+
+  /* Compat aliases */
+  --s1: rgba(255,255,255,.04); --s2: rgba(255,255,255,.07);
+  --rc: #0ea5e9; --rc2: rgba(14,165,233,0.12);
+  --r: 8px; --r2: 12px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t1); font-size: 13px; overflow: hidden; }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 99px; }
 
 @keyframes slideInFromRight4 {
   from { transform: translateX(1rem); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
-
 @keyframes slideInFromBottom {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
-
 @keyframes zoomIn95 {
   from { transform: scale(0.95); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
-
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+@keyframes popIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }

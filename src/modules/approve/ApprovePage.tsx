@@ -1,165 +1,132 @@
 import { useState } from 'react';
-import { useTaskStore } from '../../shared/stores/taskStore';
-import { CHANNELS } from '../../constants/app-config';
-import { fmtDeadline, isUrgent } from '../../shared/utils/task-utils';
-import type { Task } from '../../shared/types/editor.types';
 
-const CHECKLIST = [
-  'Chất lượng hình ảnh đạt tiêu chuẩn Singapore Way',
-  'Âm thanh rõ ràng, không nhiễu, level đúng',
-  'Hook 5 giây đầu đủ mạnh và đúng format',
-  'Transition và cut đúng nhịp, không giật',
-  'Caption/subtitle đúng, không lỗi chính tả',
+// Member's own review results page
+
+interface RejectedVideo { id: string; title: string; date: string; qc: string; reasons: string; }
+interface ApprovedVideo { id: string; title: string; date: string; qc: string; comment: string; }
+
+const REJECTED: RejectedVideo[] = [
+  { id: 'r1', title: 'Podcast NhiLe Talk Ep.21', date: '08/04/2026', qc: 'Anh Minh', reasons: '1. Màu sắc không nhất quán ở đoạn 2:34 – 3:10, cần chỉnh balance.\n2. Nhạc nền quá lớn tại intro, lấn át giọng host.\n3. Thiếu lower-third tên khách mời xuất hiện lần đầu.' },
+];
+const APPROVED: ApprovedVideo[] = [
+  { id: 'a1', title: 'Review Samsung Galaxy S25', date: '07/04/2026', qc: 'Anh Minh', comment: '"Edit rất mượt, chuyển cảnh tự nhiên. Màu sắc nhất quán và nhạc nền cân bằng tốt. Phần B-roll sản phẩm rất chuyên nghiệp — đây là chuẩn để tham khảo cho các video tới!"' },
 ];
 
-interface CheckModalProps {
-  task: Task;
-  onApprove: () => void;
-  onClose: () => void;
-}
-
-function CheckModal({ task, onApprove, onClose }: CheckModalProps) {
-  const [checked, setChecked] = useState<boolean[]>(new Array(CHECKLIST.length).fill(false));
-  const [rejectMode, setRejectMode] = useState(false);
-  const [reason, setReason] = useState('');
-  const { rejectTask } = useTaskStore();
-  const allChecked = checked.every(Boolean);
-
-  const handleReject = () => {
-    if (!reason.trim()) return;
-    rejectTask(task.id);
-    onClose();
-  };
-
+function CelebrateModal({ title, onClose }: { title: string; onClose: () => void }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: 'var(--bg3)', border: '1px solid var(--b1)', borderRadius: 12, padding: 24, width: 420, maxWidth: '92vw', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 15, color: 'var(--t1)', marginBottom: 4 }}>
-          {rejectMode ? '⛔ Từ chối video' : '✅ Duyệt video'}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: 'var(--bg2)', border: '1px solid rgba(34,197,94,0.4)', borderRadius: 16, padding: 30, textAlign: 'center', maxWidth: 380, animation: 'popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)' }} onClick={e => e.stopPropagation()}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>🎊</div>
+        <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 20, color: 'var(--green)', marginBottom: 8 }}>Video được duyệt!</div>
+        <div style={{ fontSize: 13, color: 'var(--t2)', lineHeight: 1.5, marginBottom: 12 }}>
+          Chúc mừng — video <strong style={{ color: 'var(--t1)' }}>"{title}"</strong> của bạn đã pass QC!
         </div>
-        <div style={{ fontSize: 11, color: 'var(--t3)', marginBottom: 16 }}>{task.name}</div>
-
-        {!rejectMode ? (
-          <>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--t2)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Singapore Way Checklist
-            </div>
-            {CHECKLIST.map((item, i) => (
-              <label key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={checked[i]}
-                  onChange={e => {
-                    const next = [...checked];
-                    next[i] = e.target.checked;
-                    setChecked(next);
-                  }}
-                  style={{ marginTop: 2, accentColor: 'var(--teal)', width: 14, height: 14 }}
-                />
-                <span style={{ fontSize: 12, color: checked[i] ? 'var(--t2)' : 'var(--t1)', textDecoration: checked[i] ? 'line-through' : 'none' }}>{item}</span>
-              </label>
-            ))}
-            <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
-              <button onClick={() => setRejectMode(true)} style={{ padding: '7px 14px', borderRadius: 6, background: 'rgba(198,40,40,.15)', border: '1px solid var(--red)', color: 'var(--red)', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>Từ chối</button>
-              <button
-                onClick={allChecked ? onApprove : undefined}
-                disabled={!allChecked}
-                style={{ padding: '7px 14px', borderRadius: 6, background: allChecked ? 'var(--green)' : 'var(--s2)', border: 'none', color: allChecked ? '#fff' : 'var(--t3)', fontSize: 12, cursor: allChecked ? 'pointer' : 'not-allowed', fontWeight: 600 }}
-              >
-                {allChecked ? 'Duyệt ✓' : `Tick đủ ${checked.filter(Boolean).length}/${CHECKLIST.length}`}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div style={{ fontSize: 11, color: 'var(--t2)', marginBottom: 8 }}>Lý do từ chối:</div>
-            <textarea
-              value={reason}
-              onChange={e => setReason(e.target.value)}
-              rows={4}
-              placeholder="Nhập lý do từ chối..."
-              style={{ width: '100%', padding: '8px 10px', borderRadius: 6, background: 'var(--s1)', border: '1px solid var(--b1)', color: 'var(--t1)', fontSize: 12, outline: 'none', resize: 'vertical' }}
-            />
-            <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' }}>
-              <button onClick={() => setRejectMode(false)} style={{ padding: '7px 14px', borderRadius: 6, background: 'var(--s1)', border: '1px solid var(--b1)', color: 'var(--t2)', fontSize: 12, cursor: 'pointer' }}>Quay lại</button>
-              <button onClick={handleReject} disabled={!reason.trim()} style={{ padding: '7px 14px', borderRadius: 6, background: reason.trim() ? 'var(--red)' : 'var(--s2)', border: 'none', color: reason.trim() ? '#fff' : 'var(--t3)', fontSize: 12, fontWeight: 600, cursor: reason.trim() ? 'pointer' : 'not-allowed' }}>Xác nhận từ chối</button>
-            </div>
-          </>
-        )}
+        <div style={{ fontSize: 11, color: 'var(--t3)', fontStyle: 'italic', marginBottom: 20 }}>
+          💬 QC nhận xét: "Edit rất mượt, chuyển cảnh tự nhiên — đây là chuẩn tham khảo!"
+        </div>
+        <button onClick={onClose} style={{ width: '100%', padding: '10px', borderRadius: 8, background: 'var(--teal)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          Tuyệt vời, tiếp tục! 🚀
+        </button>
       </div>
     </div>
   );
 }
 
 export function ApprovePage() {
-  const { tasks, approveTask, rejectTask } = useTaskStore();
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  const pendingTasks = tasks.filter(t => t.pend && t.step !== 'Done');
-
-  const handleApprove = (task: Task) => {
-    approveTask(task.id);
-    setSelectedTask(null);
-  };
+  const [confirmed, setConfirmed] = useState<Record<string, boolean>>({});
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [celebrate, setCelebrate] = useState<string | null>(null);
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 15, color: 'var(--t1)' }}>Video chờ duyệt</div>
-        <span style={{ background: 'var(--red)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 99 }}>{pendingTasks.length}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {/* Rejected */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 14, color: 'var(--t1)' }}>Bị từ chối</span>
+        <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: 'var(--red)', color: '#fff' }}>{REJECTED.filter(r => !confirmed[r.id]).length}</span>
       </div>
 
-      {pendingTasks.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--t3)', fontSize: 13 }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
-          <div>Không có video nào chờ duyệt</div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {pendingTasks.map(task => {
-            const ch = CHANNELS[task.ch];
-            const urgent = isUrgent(task.dl);
-            return (
-              <div key={task.id} style={{
-                background: 'var(--bg2)', borderRadius: 10,
-                border: '1px solid var(--b1)',
-                borderLeft: urgent ? '3px solid var(--red)' : '3px solid var(--b1)',
-                padding: '12px 16px',
-                display: 'flex', alignItems: 'center', gap: 12,
-              }}>
-                <span style={{ fontSize: 20 }}>{task.type === 'short' ? '✂️' : '🎬'}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', marginBottom: 4 }}>{task.name}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: `${ch.c}22`, color: ch.c, fontWeight: 600 }}>{ch.n}</span>
-                    {task.ed && <span style={{ fontSize: 10, color: 'var(--t3)' }}>👤 {task.ed}</span>}
-                    <span style={{ fontSize: 10, color: urgent ? 'var(--red)' : 'var(--t3)', fontWeight: urgent ? 700 : 400 }}>⏰ {fmtDeadline(task.dl)}</span>
-                    <span style={{ fontSize: 10, color: 'var(--t3)' }}>Step: {task.step}</span>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                  {task.src && (
-                    <a href={task.src} target="_blank" rel="noopener noreferrer"
-                      style={{ padding: '6px 10px', borderRadius: 6, background: 'var(--s2)', border: '1px solid var(--b1)', color: 'var(--blue)', fontSize: 11, textDecoration: 'none', fontWeight: 600 }}>
-                      🔗 Link
-                    </a>
-                  )}
-                  <button onClick={() => rejectTask(task.id)} style={{ padding: '6px 10px', borderRadius: 6, background: 'rgba(198,40,40,.12)', border: '1px solid var(--red)', color: 'var(--red)', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>Từ chối</button>
-                  <button onClick={() => setSelectedTask(task)} style={{ padding: '6px 12px', borderRadius: 6, background: 'var(--teal)', border: 'none', color: '#fff', fontSize: 11, cursor: 'pointer', fontWeight: 700 }}>Duyệt ✓</button>
-                </div>
+      {REJECTED.map(r => {
+        if (confirmed[r.id]) return null;
+        return (
+          <div key={r.id} style={{ background: 'var(--bg2)', border: '1px solid var(--b1)', borderLeft: '3px solid var(--red)', borderRadius: 'var(--r2)', padding: 16, marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <span style={{ fontSize: 18 }}>🎬</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>{r.title}</div>
+                <div style={{ fontSize: 10, color: 'var(--t3)' }}>Gửi: {r.date} · QC: {r.qc}</div>
               </div>
-            );
-          })}
+              <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 99, background: 'var(--red2)', color: 'var(--red)' }}>Từ chối</span>
+            </div>
+            <div style={{ background: 'var(--red2)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--r)', padding: '10px 12px', marginBottom: 10 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--red)', marginBottom: 5 }}>🔴 Lý do từ chối</div>
+              <div style={{ fontSize: 12, color: 'var(--t2)', lineHeight: 1.6, whiteSpace: 'pre-line' }}>{r.reasons}</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <input
+                type="checkbox"
+                id={`chk-${r.id}`}
+                checked={!!checked[r.id]}
+                onChange={e => setChecked(p => ({ ...p, [r.id]: e.target.checked }))}
+                style={{ cursor: 'pointer' }}
+              />
+              <label htmlFor={`chk-${r.id}`} style={{ fontSize: 11, color: 'var(--t3)', cursor: 'pointer', flex: 1 }}>
+                Tôi đã đọc kỹ lý do và hiểu rõ cần sửa gì
+              </label>
+              <button
+                disabled={!checked[r.id]}
+                onClick={() => setConfirmed(p => ({ ...p, [r.id]: true }))}
+                style={{
+                  padding: '6px 14px', borderRadius: 6, border: 'none',
+                  background: checked[r.id] ? 'var(--blue)' : 'var(--bg4)',
+                  color: '#fff', fontSize: 11, fontWeight: 600,
+                  cursor: checked[r.id] ? 'pointer' : 'not-allowed', opacity: checked[r.id] ? 1 : 0.4,
+                }}
+              >
+                Xác nhận & Làm lại →
+              </button>
+            </div>
+          </div>
+        );
+      })}
+
+      {REJECTED.every(r => confirmed[r.id]) && REJECTED.length > 0 && (
+        <div style={{ background: 'var(--green2)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 'var(--r)', padding: '10px 14px', marginBottom: 10, fontSize: 12, color: 'var(--green)' }}>
+          ✓ Đã xác nhận tất cả lý do từ chối. Hãy tiếp tục sửa và nộp lại!
         </div>
       )}
 
-      {selectedTask && (
-        <CheckModal
-          task={selectedTask}
-          onApprove={() => handleApprove(selectedTask)}
-          onClose={() => setSelectedTask(null)}
-        />
-      )}
+      <div style={{ height: 1, background: 'var(--b1)', margin: '8px 0 16px' }} />
+
+      {/* Approved */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 14, color: 'var(--t1)' }}>Được duyệt</span>
+        <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: 'var(--green)', color: '#fff' }}>{APPROVED.length}</span>
+      </div>
+
+      {APPROVED.map(a => (
+        <div key={a.id} style={{ background: 'var(--bg2)', border: '1px solid var(--b1)', borderLeft: '3px solid var(--green)', borderRadius: 'var(--r2)', padding: 16, marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <span style={{ fontSize: 18 }}>🎬</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>{a.title}</div>
+              <div style={{ fontSize: 10, color: 'var(--t3)' }}>Gửi: {a.date} · QC: {a.qc}</div>
+            </div>
+            <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 99, background: 'var(--green2)', color: 'var(--green)' }}>✓ Đã duyệt</span>
+          </div>
+          <div style={{ background: 'var(--green2)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 'var(--r)', padding: '10px 12px', marginBottom: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)', marginBottom: 4 }}>🎉 Nhận xét từ QC</div>
+            <div style={{ fontSize: 12, color: 'var(--t2)', lineHeight: 1.5 }}>{a.comment}</div>
+          </div>
+          <button
+            onClick={() => setCelebrate(a.title)}
+            style={{ width: '100%', padding: '8px', borderRadius: 8, background: 'var(--teal)', border: 'none', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+          >
+            🎊 Xem lời chúc mừng
+          </button>
+        </div>
+      ))}
+
+      {celebrate && <CelebrateModal title={celebrate} onClose={() => setCelebrate(null)} />}
     </div>
   );
 }

@@ -1,171 +1,157 @@
 import { useNavigate } from 'react-router-dom';
-import { useTaskStore } from '../../shared/stores/taskStore';
-import { getStats, fmtDeadline, isUrgent } from '../../shared/utils/task-utils';
-import { CHANNELS, STEPS, STEP_COLORS } from '../../constants/app-config';
-import type { TaskChannel } from '../../shared/types/editor.types';
 
-const cardBorders = ['var(--blue)', 'var(--teal)', 'var(--green)', 'var(--gold)'];
-
-function StatCard({ label, value, footer, border }: { label: string; value: string | number; footer: string; border: string }) {
+// KPI ring using SVG. r=22 → circumference ≈ 138.2
+function KpiRing({ value, max, unit, color }: { value: number; max: number; unit: string; color: string }) {
+  const C = 138.2;
+  const pct = Math.min(value / max, 1);
+  const dash = C * pct;
   return (
-    <div style={{
-      background: 'var(--bg2)', borderRadius: 10,
-      border: '1px solid var(--b1)', borderTop: `3px solid ${border}`,
-      padding: '14px 16px',
-    }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--t3)', marginBottom: 8 }}>{label}</div>
-      <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 28, color: 'var(--t1)' }}>{value}</div>
-      <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 6 }}>{footer}</div>
+    <svg width="52" height="52" viewBox="0 0 52 52" style={{ transform: 'rotate(-90deg)', flexShrink: 0 }}>
+      <circle cx="26" cy="26" r="22" fill="none" stroke="var(--bg3)" strokeWidth="5" />
+      <circle cx="26" cy="26" r="22" fill="none" stroke={color} strokeWidth="5"
+        strokeLinecap="round" strokeDasharray={`${dash} ${C}`} strokeDashoffset="0" />
+    </svg>
+  );
+}
+
+interface KpiCardProps { label: string; value: number; max: number; unit: string; sub: string; trend: string; trendUp: boolean; color: string; }
+function KpiCard({ label, value, max, unit, sub, trend, trendUp, color }: KpiCardProps) {
+  return (
+    <div style={{ background: 'var(--bg2)', border: '1px solid var(--b1)', borderRadius: 'var(--r2)', padding: 14 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--t3)', marginBottom: 10 }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <KpiRing value={value} max={max} unit={unit} color={color} />
+        <div>
+          <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 24, color: 'var(--t1)', lineHeight: 1 }}>
+            {value}<span style={{ fontSize: 13, color: 'var(--t3)' }}>{unit === '%' ? '%' : unit === '/100' ? '/100' : `/${max}`}</span>
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 3 }}>{sub}</div>
+        </div>
+      </div>
+      <div style={{ fontSize: 10, marginTop: 8, color: trendUp ? 'var(--green)' : 'var(--red)' }}>{trend}</div>
     </div>
   );
 }
 
+const MY_VIDEOS = [
+  { id: 'v1', title: 'Podcast NhiLe Talk Ep.22', urgency: 'urgent' as const, badge: '⚡ 3h còn lại', step: 'B5: Xuất video', channel: 'NhiLe' },
+  { id: 'v2', title: 'Review iPhone 16 Pro Max', urgency: 'warning' as const, badge: '⏰ 8h còn lại', step: 'B4: Hậu kỳ', channel: 'NhiLe' },
+  { id: 'v3', title: 'Vlog Trip Đà Nẵng 2025', urgency: 'normal' as const, badge: '🟢 2 ngày còn', step: 'B2: Tải tài nguyên', channel: 'NhiLe Lifestyle' },
+];
+
+const URGENCY_COLOR = { urgent: 'var(--red)', warning: 'var(--amber)', normal: 'var(--teal)' };
+const URGENCY_BG = { urgent: 'var(--red2)', warning: 'var(--amber2)', normal: 'var(--teal2)' };
+
+const PROGRESS_ITEMS = [
+  { label: 'Video hoàn thành', done: 8, total: 12, color: 'linear-gradient(90deg,var(--accent),var(--teal))' },
+  { label: 'Why Journal ghi', done: 8, total: 8, color: 'linear-gradient(90deg,var(--purple),var(--accent))' },
+  { label: 'Learning Log', done: 1, total: 2, warn: '1 chờ điền', color: 'linear-gradient(90deg,var(--amber),var(--red))' },
+];
+
 export function DashboardPage() {
-  const { tasks } = useTaskStore();
   const navigate = useNavigate();
-  const stats = getStats(tasks);
-
-  // Step counts (exclude Done/Reject for pipeline)
-  const stepCounts = STEPS.slice(0, 5).map(s => ({
-    step: s, count: tasks.filter(t => t.step === s).length,
-  }));
-
-  // Pending approval
-  const pendingTasks = tasks.filter(t => t.pend && t.step !== 'Done').slice(0, 4);
-
-  // Channel output
-  const channelKeys = Object.keys(CHANNELS) as TaskChannel[];
-  const channelDone = channelKeys.map(ch => ({
-    ch,
-    done: tasks.filter(t => t.ch === ch && t.step === 'Done').length,
-    total: tasks.filter(t => t.ch === ch).length,
-  }));
-  const maxDone = Math.max(...channelDone.map(c => c.done), 1);
-
-  // KPI weekly
-  const kpiItems = [
-    { label: 'Completion Rate', value: stats.cr, target: 70, unit: '%' },
-    { label: 'Approval Rate', value: stats.ar, target: 80, unit: '%' },
-    { label: 'Reject Rate', value: stats.rr, target: 20, unit: '%', invert: true },
-    { label: 'Active Tasks', value: stats.active, target: 8, unit: '' },
-  ];
 
   return (
-    <div>
-      {/* Stats grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-        <StatCard label="Task đang chạy" value={stats.active} footer={`${stats.total} tổng`} border={cardBorders[0]} />
-        <StatCard label="Completion Rate" value={`${stats.cr}%`} footer={`${stats.done} done / ${stats.total} total`} border={cardBorders[1]} />
-        <StatCard label="Approval Rate" value={`${stats.ar}%`} footer={`${stats.done} approved`} border={cardBorders[2]} />
-        <StatCard label="Chờ duyệt" value={stats.pend} footer="cần xem xét ngay" border={cardBorders[3]} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Alert banner */}
+      <div style={{
+        background: 'var(--amber2)', border: '1px solid rgba(245,158,11,0.3)',
+        borderRadius: 'var(--r)', padding: '8px 12px',
+        display: 'flex', alignItems: 'center', gap: 8, fontSize: 11,
+      }}>
+        <span style={{ fontSize: 14 }}>⚡</span>
+        <span style={{ color: 'var(--amber)', fontWeight: 600, flex: 1 }}>
+          Learning Log "Podcast Ep.22" cần hoàn thành trong 18 giờ!
+        </span>
+        <button
+          onClick={() => navigate('/onboard')}
+          style={{ padding: '4px 10px', borderRadius: 6, background: 'var(--bg3)', border: '1px solid var(--b1)', color: 'var(--t2)', fontSize: 10, cursor: 'pointer' }}
+        >
+          Điền ngay
+        </button>
       </div>
 
-      {/* Two column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
-        {/* Left column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Pipeline quick */}
-          <div style={{ background: 'var(--bg2)', borderRadius: 10, border: '1px solid var(--b1)', padding: '14px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--t1)' }}>Pipeline nhanh</span>
-              <button onClick={() => navigate('/pipeline')} style={{ fontSize: 10, color: 'var(--blue)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Xem tất cả →</button>
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {stepCounts.map((sc, i) => (
-                <button
-                  key={sc.step}
-                  onClick={() => navigate('/pipeline')}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '6px 12px', borderRadius: 6,
-                    background: `${STEP_COLORS[i]}22`,
-                    border: `1px solid ${STEP_COLORS[i]}44`,
-                    cursor: 'pointer',
-                    color: STEP_COLORS[i],
-                    fontSize: 11, fontWeight: 500,
-                  }}
-                >
-                  <span style={{
-                    background: STEP_COLORS[i], color: '#fff',
-                    borderRadius: 99, width: 18, height: 18,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 10, fontWeight: 700,
-                  }}>{sc.count}</span>
-                  {sc.step}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* KPI row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+        <KpiCard label="Video hoàn thành" value={8} max={12} unit="/12" sub="Tháng này" trend="↑ 2 so với tháng trước" trendUp color="var(--teal)" />
+        <KpiCard label="Tỉ lệ duyệt" value={85} max={100} unit="%" sub="Pass lần đầu" trend="↑ 5% tháng trước" trendUp color="var(--green)" />
+        <KpiCard label="On-time delivery" value={70} max={100} unit="%" sub="Đúng deadline" trend="↓ Cần cải thiện" trendUp={false} color="var(--amber)" />
+        <KpiCard label="Điểm mindset" value={90} max={100} unit="/100" sub="Journal + reflex" trend="↑ Giữ vững nhé!" trendUp color="var(--purple)" />
+      </div>
 
-          {/* Pending approval */}
-          <div style={{ background: 'var(--bg2)', borderRadius: 10, border: '1px solid var(--b1)', padding: '14px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--t1)' }}>Video chờ duyệt</span>
-              <button onClick={() => navigate('/approve')} style={{ fontSize: 10, color: 'var(--gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Duyệt ngay →</button>
-            </div>
-            {pendingTasks.length === 0 ? (
-              <div style={{ color: 'var(--t3)', fontSize: 12, padding: '12px 0' }}>Không có video nào chờ duyệt</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {pendingTasks.map(task => {
-                  const ch = CHANNELS[task.ch];
-                  const urgent = isUrgent(task.dl);
-                  return (
-                    <div key={task.id} style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '8px 10px', borderRadius: 6,
-                      background: 'var(--s1)', border: '1px solid var(--b1)',
-                      borderLeft: urgent ? '3px solid var(--red)' : '3px solid var(--b1)',
-                    }}>
-                      <span style={{ fontSize: 14 }}>{task.type === 'short' ? '✂️' : '🎬'}</span>
-                      <span style={{ flex: 1, fontSize: 12, color: 'var(--t1)', fontWeight: 500 }}>{task.name}</span>
-                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `${ch.c}22`, color: ch.c }}>{ch.n}</span>
-                      <span style={{ fontSize: 10, color: urgent ? 'var(--red)' : 'var(--t3)' }}>{fmtDeadline(task.dl)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+      {/* 2-column row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        {/* My videos */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 14, color: 'var(--t1)' }}>Video của bạn</span>
+            <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: 'var(--red)', color: '#fff' }}>3</span>
           </div>
+          {MY_VIDEOS.map(v => (
+            <div
+              key={v.id}
+              onClick={() => navigate('/pipeline')}
+              style={{
+                background: 'var(--bg2)', border: '1px solid var(--b1)',
+                borderLeft: `3px solid ${URGENCY_COLOR[v.urgency]}`,
+                borderRadius: 'var(--r)', padding: '11px 14px',
+                display: 'flex', alignItems: 'center', gap: 10,
+                marginBottom: 7, cursor: 'pointer', transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg3)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'var(--bg2)')}
+            >
+              <span style={{ fontSize: 18 }}>🎬</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)', marginBottom: 4 }}>{v.title}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99,
+                    color: URGENCY_COLOR[v.urgency], background: URGENCY_BG[v.urgency],
+                  }}>{v.badge}</span>
+                  <span style={{ fontSize: 9, color: 'var(--t3)' }}>{v.step}</span>
+                  <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'var(--accent2)', color: 'var(--accent)', fontWeight: 600 }}>{v.channel}</span>
+                </div>
+              </div>
+              <span style={{ color: 'var(--t3)', fontSize: 11 }}>→</span>
+            </div>
+          ))}
         </div>
 
         {/* Right column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* KPI weekly */}
-          <div style={{ background: 'var(--bg2)', borderRadius: 10, border: '1px solid var(--b1)', padding: '14px 16px' }}>
-            <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--t1)', marginBottom: 12 }}>KPI tuần</div>
-            {kpiItems.map(kpi => {
-              const ok = kpi.invert ? kpi.value <= kpi.target : kpi.value >= kpi.target;
-              return (
-                <div key={kpi.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontSize: 11, color: 'var(--t2)' }}>{kpi.label}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: ok ? 'var(--green)' : 'var(--amber)' }}>{kpi.value}{kpi.unit}</span>
-                    <span style={{ fontSize: 12 }}>{ok ? '✅' : '⚠️'}</span>
-                  </div>
-                </div>
-              );
-            })}
+        <div>
+          {/* Mindset card */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 14, color: 'var(--t1)' }}>Mindset hôm nay</span>
+            </div>
+            <div style={{ background: 'var(--bg2)', border: '1px solid var(--b1)', borderRadius: 'var(--r2)', padding: 14 }}>
+              <div style={{ fontSize: 20, marginBottom: 8 }}>💡</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', marginBottom: 5 }}>"Craft before speed."</div>
+              <div style={{ fontSize: 11, color: 'var(--t3)', lineHeight: 1.6 }}>
+                Một video xuất đúng hạn nhưng ẩu sẽ bị reject — tốn gấp đôi thời gian. Làm đúng ngay từ đầu.
+              </div>
+            </div>
           </div>
 
-          {/* Channel output */}
-          <div style={{ background: 'var(--bg2)', borderRadius: 10, border: '1px solid var(--b1)', padding: '14px 16px' }}>
-            <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 13, color: 'var(--t1)', marginBottom: 12 }}>Output theo kênh</div>
-            {channelDone.map(c => {
-              const ch = CHANNELS[c.ch];
-              const pct = maxDone > 0 ? (c.done / maxDone) * 100 : 0;
-              return (
-                <div key={c.ch} style={{ marginBottom: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                    <span style={{ fontSize: 10, color: 'var(--t2)' }}>{ch.n}</span>
-                    <span style={{ fontSize: 10, color: ch.c, fontWeight: 600 }}>{c.done}/{c.total}</span>
-                  </div>
-                  <div style={{ height: 5, borderRadius: 3, background: 'var(--s2)' }}>
-                    <div style={{ height: '100%', borderRadius: 3, background: ch.c, width: `${pct}%`, transition: 'width 0.3s' }} />
-                  </div>
+          {/* Progress */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 14, color: 'var(--t1)' }}>Tiến độ tháng</span>
+          </div>
+          <div style={{ background: 'var(--bg2)', border: '1px solid var(--b1)', borderRadius: 'var(--r2)', padding: 14 }}>
+            {PROGRESS_ITEMS.map(p => (
+              <div key={p.label} style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, color: 'var(--t3)' }}>{p.label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: p.warn ? 'var(--amber)' : 'var(--t1)' }}>
+                    {p.warn || `${p.done}/${p.total}`}
+                  </span>
                 </div>
-              );
-            })}
+                <div style={{ background: 'var(--bg3)', borderRadius: 99, height: 5, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', borderRadius: 99, background: p.color, width: `${Math.round(p.done / p.total * 100)}%`, transition: 'width 0.5s' }} />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

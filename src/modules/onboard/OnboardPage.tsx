@@ -25,7 +25,7 @@ export function OnboardPage() {
   })();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Page header */}
       <div style={{ marginBottom: 16 }}>
         <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 20, color: 'var(--t1)', marginBottom: 4 }}>
@@ -66,7 +66,7 @@ export function OnboardPage() {
       </div>
 
       {/* Tab content */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div>
         {activeTab === 'mindset'    && <MindsetEditor />}
         {activeTab === 'why'        && <WhyJournal />}
         {activeTab === 'learning'   && <LearningLog />}

@@ -10,18 +10,18 @@ const NAV_GROUPS = [
     label: 'Tổng quan',
     items: [
       { to: '/dashboard', label: 'Dashboard', icon: '⊞' },
-      { to: '/pipeline', label: 'Pipeline SOP', icon: '◈' },
     ],
   },
   {
-    label: 'Quản lý',
+    label: 'Công việc',
     items: [
+      { to: '/pipeline', label: 'Pipeline SOP', icon: '◈' },
       { to: '/approve', label: 'Duyệt video', icon: '✓', badgeKey: 'review' as const, badgeColor: '#ef4444' },
       { to: '/team', label: 'Editor Team', icon: '◉' },
     ],
   },
   {
-    label: 'Phát triển',
+    label: 'Cá nhân',
     items: [
       { to: '/onboard', label: 'Onboard & Phát triển', icon: '🌱', badgeKey: 'grad' as const, badgeColor: '#f59e0b' },
     ],

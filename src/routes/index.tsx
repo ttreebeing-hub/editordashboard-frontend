@@ -6,6 +6,7 @@ import { ApprovePage } from '../modules/approve/ApprovePage';
 import { KpiPage } from '../modules/kpi/KpiPage';
 import { TeamPage } from '../modules/team/TeamPage';
 import { MyTasksPage } from '../modules/mytasks/MyTasksPage';
+import { OnboardPage } from '../modules/onboard/OnboardPage';
 
 export function AppRoutes() {
   return (
@@ -18,6 +19,7 @@ export function AppRoutes() {
         <Route path="/kpi" element={<KpiPage />} />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/mytasks" element={<MyTasksPage />} />
+        <Route path="/onboard" element={<OnboardPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>

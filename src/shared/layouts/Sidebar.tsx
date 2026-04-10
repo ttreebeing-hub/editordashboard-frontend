@@ -25,6 +25,7 @@ const NAV_GROUPS = [
     label: 'Cá nhân',
     items: [
       { to: '/mytasks', label: 'Nhiệm vụ cá nhân', icon: '☑' },
+      { to: '/onboard', label: 'Onboard & Phát triển', icon: '🌱', badgeKey: 'grad' as const, badgeColor: '#ef9f27' },
     ]
   }
 ];
@@ -37,9 +38,22 @@ export function Sidebar() {
   const pendCount = tasks.filter(t => t.pend && t.step !== 'Done').length;
   const activeCount = tasks.filter(t => t.step !== 'Done' && t.step !== 'Reject').length;
 
+  // Graduation check badge: show "!" if within 7 days of Day 90 and not yet submitted
+  const gradBadge = (() => {
+    try {
+      const g = JSON.parse(localStorage.getItem('nl2_graduation') || '{}');
+      if (g.attempted) return 0;
+      // Demo: Day 1 = 87 days ago → Day 87, 3 days left → within 7 days
+      const daysSince = 87;
+      const daysLeft = 90 - daysSince;
+      return daysLeft <= 7 ? 1 : 0;
+    } catch { return 0; }
+  })();
+
   const badges: Record<string, number> = {
     pend: pendCount,
     active: activeCount,
+    grad: gradBadge,
   };
 
   return (

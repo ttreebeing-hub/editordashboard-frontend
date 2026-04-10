@@ -12,6 +12,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/kpi': 'KPI & Báo cáo',
   '/team': 'Editor Team',
   '/mytasks': 'Nhiệm vụ cá nhân',
+  '/onboard': 'Onboard & Phát triển',
 };
 
 function getPageTitle(pathname: string): string {
